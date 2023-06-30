@@ -137,7 +137,7 @@ class ApplyRegistration:
                 registration_transformation = pdal.Filter.transformation(
                     matrix=aoi_to_fnd_string
                 )
-            return registration_transformation
+            return aoi_to_fnd_string, registration_transformation
 
     def apply(self) -> None:
         """
@@ -172,7 +172,7 @@ class ApplyRegistration:
             )
 
         # insert the transform filter to register the AOI
-        registration_task = self.get_registration_transformation()
+        _, registration_task = self.get_registration_transformation()
         if isinstance(registration_task, pdal.pipeline.Filter):
             pipeline |= registration_task
         else:
@@ -287,8 +287,8 @@ class ApplyRegistration:
         do not store coordinate reference system information.
         """
         mesh = trimesh.load_mesh(self.aoi_file)
-
-        mesh.apply_transform(self.get_registration_transformation())
+        _, registration_task = self.get_registration_transformation()
+        mesh.apply_transform(registration_task)
         mesh.units = self.fnd_units
 
         root, ext = os.path.splitext(self.aoi_file)
@@ -336,8 +336,9 @@ class ApplyRegistration:
         """
         Applies the registration transformation to a point cloud file.
         """
+        _, registration_task = self.get_registration_transformation()
         pipeline = pdal.Reader(self.aoi_file)
-        pipeline |= self.get_registration_transformation()
+        pipeline |= registration_task
         pipeline |= pdal.Writer.las(filename=self.out_name)
 
         pipeline.execute()
