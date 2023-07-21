@@ -24,6 +24,7 @@ from typing import Tuple
 from typing import Union
 
 import yaml
+from codem import __version__
 from codem.lib.log import Log
 from codem.preprocessing.preprocess import clip_data
 from codem.preprocessing.preprocess import GeoData
@@ -303,6 +304,12 @@ def get_args() -> argparse.Namespace:
             "must have the same CRS defined."
         ),
     )
+    ap.add_argument(
+        "--version",
+        action="version",
+        version=f"{__version__}",
+        help="Display codem version information",
+    )
     return ap.parse_args()
 
 
@@ -414,7 +421,7 @@ def preprocess(config: Dict[str, Any]) -> Tuple[GeoData, GeoData]:
     # create DSM, but if doing tight-search do not resample
     resample = not config["TIGHT_SEARCH"]
     fnd_obj._create_dsm(resample=resample)
-    aoi_obj._create_dsm(resample=resample)
+    aoi_obj._create_dsm(resample=resample, fallback_crs=fnd_obj.crs)
     return fnd_obj, aoi_obj
 
 
